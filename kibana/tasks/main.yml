@@ -1,0 +1,40 @@
+---
+- name: Download the Kibana tarball
+  command: curl -O https://download.elastic.co/kibana/kibana/kibana-4.0.3-linux-x64.tar.gz
+  #mode=0644 cent6.6
+  args:
+    chdir: /root/
+    creates: /root/kibana-4.0.3-linux-x64
+
+- name: Extract the Kibana archive
+  unarchive: src=/root/kibana-4.0.3-linux-x64.tar.gz dest=/root/ copy=no
+  # mode=0755
+
+- name: Configure Kibana
+  template: src=config.js.j2 dest=/root/kibana-4.0.3-linux-x64/config.js #mode=0644 owner=root group=root mode=0644
+
+- name: Copy Kibana installation into a new directory - create directory
+  sudo: yes
+  command: mkdir -p /usr/share/nginx/kibana4
+
+- name: Copy Kibana installation into the new directory
+  raw: cp -R /root/kibana-4.0.3-linux-x64/* /usr/share/nginx/kibana4/
+
+- name: Create a Kibana login
+  sudo: yes
+  htpasswd:
+    path: /etc/nginx/conf.d/kibana.myhost.org.htpasswd
+    name: zaphod
+    password: zaphod
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - restart nginx
+
+- name: Configure Kibana for nginx
+  sudo: yes
+  template: src=nginx_kibana.conf.j2 dest=/etc/nginx/conf.d/default.conf     #owner=root group=root mode=0644
+  notify:
+    - restart nginx
+    - restart elasticsearch
