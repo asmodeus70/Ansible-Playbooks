@@ -1,0 +1,67 @@
+---
+- hosts: vagrant
+  gather_facts: yes
+  vars:
+        puppet_download: https://yum.puppetlabs.com/puppetlabs-release-el-7.noarch.rpm
+        puppet_name: puppetlabes-release
+        download_folder: /tmp
+        puppet_archive: "{{download_folder}}/{{puppet_name}}.rpm"
+
+  tasks:
+  - name: Install the puppet repo package [yum]
+    yum: "name=https://yum.puppetlabs.com/puppetlabs-release-el-7.noarch.rpm"
+    become: yes
+    when: ansible_os_family  == "RedHat" or ansible_os_family  == "Centos"
+
+  - name: Install all the required packages for a puppetmaster [yum]
+    yum: "name={{item}} state=present"
+    become: yes
+    with_items: [
+      "puppet-server",
+      "puppetdb",
+      "hiera",
+      "facter",
+      "puppetdb-terminus",
+      "git"
+      ]
+
+  - name: install r10k
+    command: gem install --verbose r10k creates="/usr/bin/r10k"
+    become: yes
+  - name: Start the puppetmaster service
+    service: "name=puppetmaster state=restarted"
+    become: yes
+  - name: puppet agent --test
+    command: puppet agent --test --server {{ansible_fqdn}} creates="/var/lib/puppet/ssl/certs/{{ ansible_fqdn }}"
+    become: yes
+  - name: puppetdb ssl-setup
+    command: puppetdb ssl-setup creates="/etc/puppetdb/ssl"
+    become: yes
+  - name: Install default hiera.conf
+    template: src=hiera.conf.j2 dest=/etc/puppet/hiera.conf owner=root group=root mode=0644
+    become: yes
+  - name: Install default puppet.conf
+    template: src=puppet.conf.j2 dest=/etc/puppet/puppet.conf owner=root group=root mode=0644
+    become: yes
+  - name: Install default puppetdb.conf
+    template: src=puppetdb.conf.j2 dest=/etc/puppet/puppetdb.conf owner=root group=root mode=0644
+    become: yes
+  - name: Install default routes.yaml
+    template: src=routes.yaml.j2 dest=/etc/puppet/routes.yaml owner=root group=root mode=0644
+    become: yes
+  - name: Install default r10k.yaml
+    template: src=r10k.yaml.j2 dest=/etc/r10k.yaml owner=root group=root mode=0644
+    become: yes
+  - name: r10k deploy
+    command: r10k deploy environment creates="/etc/puppet/environments/master"
+    become: yes
+  - name: install puppet-lint
+    gem: name=puppet-lint
+    become: yes
+  - name: Start all the services.
+    service: "name={{item}} state=restarted"
+    become: yes
+    with_items: [
+        "puppetmaster",
+        "puppetdb",
+    ]
