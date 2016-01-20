@@ -1,4 +1,4 @@
-puppet-master
+puppet-master Ansible playbook
 ------------------------
 
 This playbook will install Puppet 3.8 and has been tested on Centos 7 and should also work on RHEL 7.
