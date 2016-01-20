@@ -16,7 +16,7 @@ Installs all puppet pre-requisites including the following.
 * git
 * puppet-lint
 
-Configure puppetmater
+Configure puppet master
 * with puppetdb via ssl (:8081)
 * hieradata in /etc/puppet/environments
 * r10k will sync hieradata
