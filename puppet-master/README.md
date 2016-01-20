@@ -31,6 +31,6 @@ Running
 
 Install  Puppet master on a node called 'puppet' 
 
-	$ ansible-playbook -i hosts install.yaml
+	$ ansible-playbook -i hosts /tasks/install.yml
 
 
