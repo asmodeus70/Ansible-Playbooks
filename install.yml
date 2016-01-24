@@ -1,8 +1,0 @@
-#
-##About: This will install Puppet
-##
----
-- hosts: vagrant
-  become: yes
-  roles:
-  - puppet-master
